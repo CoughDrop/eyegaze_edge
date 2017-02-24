@@ -1,0 +1,15 @@
+{
+  "main": "eyegaze_edge",
+  "name": "eyegaze_edge",
+  "version": "0.0.1",
+  "description": "eyegade edge module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/coughdrop/eyegaze_edge.git"
+  },
+  "scripts": {
+    "o-install": "echo 'ok'",
+    "install": "node-gyp rebuild"
+  },
+  "readme": "ERROR: No README Found"
+}

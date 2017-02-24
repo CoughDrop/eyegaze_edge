@@ -1,0 +1,15 @@
+*.dll
+*.lib
+*.bat
+build/Debug/**
+build/Release/**
+build/ipch/**
+build/x64/**
+build/EdgeTracker/Debug/**
+build/EdgeTracker/Release/**
+build/EdgeTracker/x64/**
+build/EdgeTracker/lctigaze.lib
+build/EdgeTracker/Egwin.h
+build/EdgeTracker/lctypdef.h
+build/.vs/**
+include/**
