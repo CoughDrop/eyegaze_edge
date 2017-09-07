@@ -7,6 +7,8 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <sstream>
+#include <csignal>
 #include <future>
 #include <thread>
 #include <mutex>
@@ -113,9 +115,32 @@ void SmoothGazepoint(int iEyeFound,
 	/* (no code)                                                                */
 }
 
+bool keep_polling = true;
+std::mutex m;
+std::condition_variable cv;
+
+void signalHandler(int signum) {
+	printf("Manually exited\n");
+	std::streambuf* orig = std::cin.rdbuf();
+	std::istringstream input("q\n");
+	std::cin.rdbuf(input.rdbuf());
+	// tests go here
+	std::cin.rdbuf(orig);
+
+	auto lock = std::unique_lock<std::mutex>(m);
+	lock.unlock();
+	cv.notify_all();
+
+	keep_polling = false;
+
+//	EgExit(&stEgControl);
+
+	exit(signum);
+}
 int main(int argc, char *argv[])
 {
 	printf("Edge Tracker\n");
+	signal(SIGINT, signalHandler);
 
 //	HDC screen = GetDC(0);
 //	int dpiX = GetDeviceCaps(screen, LOGPIXELSX);
@@ -184,6 +209,7 @@ int main(int argc, char *argv[])
 		printf("Eyegaze Edge initialized!\n");
 		if(argc > 1 && std::string(argv[1]) == "calibrate") {
 			EgCalibrate2(&stEgControl, EG_CALIBRATE_DISABILITY_APP);
+			printf("Eyegaze Edge calibrated\n");
 			do_poll = false;
 		}
 	}
@@ -194,17 +220,21 @@ int main(int argc, char *argv[])
 	stEgControl.bTrackingActive = TRUE;
 
 
-	std::mutex m;
-	std::condition_variable cv;
 	std::string new_string;
 	bool new_request = true;
 
 	if (do_poll) {
 		auto io_thread = std::thread([&] {
 			std::string s;
-			while (std::getline(std::cin, s, '\n'))
+			while (keep_polling && std::getline(std::cin, s, '\n'))
 			{
+				printf("poll\n");
 				new_request = true;
+				std::size_t found = s.find("q");
+				if (found != std::string::npos) {
+					keep_polling = false;
+					printf("Received quit message\n");
+				}
 				auto lock = std::unique_lock<std::mutex>(m);
 				lock.unlock();
 				cv.notify_all();
@@ -226,7 +256,7 @@ int main(int argc, char *argv[])
 		/*    buffers allow the GazeDemo loop to process all past gazepoint data    */
 		/*    samples even if the loop falls up to EG_BUFFER_LEN samples behind     */
 		/*    real time.                                                            */
-		while (1) {
+		while (keep_polling) {
 			auto lock = std::unique_lock<std::mutex>(m);
 			cv.wait(lock, [&] { return true; });
 			current_string = new_string;
@@ -275,8 +305,11 @@ int main(int argc, char *argv[])
 				}
 			}
 		}
+		printf("Done with loop, waiting on thread...\n");
+		keep_polling = false;
 		io_thread.join();
 	}
+	printf("Exiting\n");
 	EgExit(&stEgControl);
 
 	return 0;

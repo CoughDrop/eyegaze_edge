@@ -1,5 +1,6 @@
 (function () {
     var cp = require('child_process');
+    var fs = require('fs');
     var tracker = null;
     var latest = null;
     var edge = {
@@ -28,11 +29,15 @@
             }
             setTimeout(function () {
                 manually_closing = true;
+                test.stdin.write('q\n');
+                test.stdout.read();
                 test.kill();
             }, 1000);
         },
         teardown: function () {
             if (tracker) {
+                tracker.stdin.write('q\n');
+                tracker.stdout.read();
                 tracker.kill();
                 tracker = null;
             }
@@ -73,11 +78,41 @@
             tracker.stdout.setEncoding('utf-8');
             setTimeout(edge.query, 100);
         },
-        calibrate: function() {
-
+        calibrate: function (callback) {
+            callback = callback || (function (res) { console.log(res); });
+            var dir = process.cwd() + "\\edge"
+            try {
+                fs.mkdir('C:\\Eyegaze', function (err) {
+                    if (err && err.code && err.code != 'EEXIST') {
+                        callback({ calibrated: false });
+                        return;
+                    }
+                    var test = cp.spawn(dir + "\\Calibrate.exe", {
+                        cwd: dir
+                    });
+                    var str = "";
+                    test.stdout.setEncoding('utf-8');
+                    test.stdout.on('data', function (data) {
+                        str = str + data;
+                    });
+                    test.on('exit', function (code) {
+                        console.log("output:", str);
+                        if (fs.existsSync("C:\\Eyegaze\\calibration.dat")) {
+                            cp.spawn("copy /y C:\\Eyegaze\\calibration.dat " + dir + "\\calibration.dat");
+                            callback({ calibrated: true });
+                        } else {
+                            callback({ calibrated: false });
+                        }
+                    });
+                });
+            } catch (e) {
+                callback({ calibrated: false });
+            }
         },
         stop_listening: function () {
             if (tracker) {
+                tracker.stdin.write('q\n');
+                tracker.stdout.read();
                 tracker.kill();
                 tracker = null;
             }

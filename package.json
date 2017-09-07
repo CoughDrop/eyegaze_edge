@@ -8,8 +8,8 @@
     "url": "git+https://github.com/coughdrop/eyegaze_edge.git"
   },
   "scripts": {
-    "o-install": "echo 'ok'",
-    "install": "node-gyp rebuild"
+    "install": "echo 'ok'",
+    "o-install": "node-gyp rebuild"
   },
   "readme": "ERROR: No README Found"
 }
