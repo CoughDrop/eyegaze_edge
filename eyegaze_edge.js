@@ -7,6 +7,7 @@
         setup: function (callback) {
             var dir = process.cwd() + "\\edge";
             var manually_closing = false;
+            var responded = false;
             try {
                 var test = cp.spawn(dir + "\\EdgeTracker.exe", {
                     cwd: dir
@@ -15,17 +16,25 @@
                 test.stdout.setEncoding('utf-8');
                 test.stdout.on('data', function (data) {
                     str = str + data;
+                    if (data && data.match(/initialized/)) {
+                        responded = true;
+                        callback({ ready: true });
+                    }
                 });
                 test.on('exit', function (code) {
                     console.log("output:", str);
+                    if (responded) { return; }
                     if (!manually_closing || !str.match(/initialized/)) {
                         callback({ ready: false });
                     } else {
+                        criteria_met = true;
                         callback({ ready: true });
                     }
                 });
             } catch (e) {
-                callback({ ready: false });
+                if (!responded) {
+                    callback({ ready: false });
+                }
             }
             setTimeout(function () {
                 manually_closing = true;
@@ -47,6 +56,7 @@
                 tracker.stdin.write('read\n');
                 var data = tracker.stdout.read();
                 var lines = (data || "").split(/\n/);
+                var dimensions = {};
                 for (var idx = 0; idx < lines.length; idx++) {
                     if (lines[idx]) {
                         parts = lines[idx].split(/,/);
@@ -59,8 +69,16 @@
                                     gaze_x: x,
                                     gaze_y: y,
                                     gaze_ts: ts,
-                                    scaled: false
+                                    scaled: true
                                 };
+                            }
+                        } else {
+                            parts = lines[idx].split(/\s+/);
+                            var width = parseFloat(parts[0] || 'none');
+                            var height = parseFloat(parts[1] || 'none');
+                            if (isFinite(width) && isFinite(height)) {
+                                dimensions.width = width;
+                                dimensions.height = height;
                             }
                         }
                     }
