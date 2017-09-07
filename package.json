@@ -1,7 +1,7 @@
 {
   "main": "eyegaze_edge",
   "name": "eyegaze_edge",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "eyegade edge module",
   "repository": {
     "type": "git",

@@ -5,7 +5,7 @@
     var latest = null;
     var edge = {
         setup: function (callback) {
-            var dir = process.cwd() + "\\edge"
+            var dir = process.cwd() + "\\edge";
             var manually_closing = false;
             try {
                 var test = cp.spawn(dir + "\\EdgeTracker.exe", {
@@ -32,7 +32,7 @@
                 test.stdin.write('q\n');
                 test.stdout.read();
                 test.kill();
-            }, 1000);
+            }, 5000);
         },
         teardown: function () {
             if (tracker) {
@@ -98,7 +98,7 @@
                     test.on('exit', function (code) {
                         console.log("output:", str);
                         if (fs.existsSync("C:\\Eyegaze\\calibration.dat")) {
-                            cp.spawn("copy /y C:\\Eyegaze\\calibration.dat " + dir + "\\calibration.dat");
+                            cp.exec("copy /y C:\\Eyegaze\\calibration.dat " + dir + "\\calibration.dat");
                             callback({ calibrated: true });
                         } else {
                             callback({ calibrated: false });

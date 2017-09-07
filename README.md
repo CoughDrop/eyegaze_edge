@@ -44,6 +44,8 @@ dlls provided by the vendor ([http://www.eyegaze.com]).
 When this library is installed, it should automatically be used by 
 [gazelinger.js](https://github.com/CoughDrop/gazelinger) if also installed.
 
+Also note, the dlls will only compile in x86, not x64.
+
 ### License
 
 MIT
