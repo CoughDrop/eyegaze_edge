@@ -14,15 +14,17 @@
                 });
                 var str = "";
                 test.stdout.setEncoding('utf-8');
+                test.stdin.setEncoding('utf-8');
                 test.stdout.on('data', function (data) {
                     str = str + data;
                     if (data && data.match(/initialized/)) {
+                        console.log('Eyegaze Edge is Available');
                         responded = true;
                         callback({ ready: true });
                     }
                 });
                 test.on('exit', function (code) {
-                    console.log("output:", str);
+                    console.log("Eyegaze Edge output:", str);
                     if (responded) { return; }
                     if (!manually_closing || !str.match(/initialized/)) {
                         callback({ ready: false });
@@ -31,6 +33,9 @@
                         callback({ ready: true });
                     }
                 });
+                // Reuse for listening for events in the case where speak mode 
+                // initializes before the setup check is finished.
+                tracker = {process: test};
             } catch (e) {
                 if (!responded) {
                     callback({ ready: false });
@@ -38,23 +43,26 @@
             }
             setTimeout(function () {
                 manually_closing = true;
-                test.stdin.write('q\n');
-                test.stdout.read();
-                test.kill();
-            }, 5000);
+                if(!tracker.in_use && tracker.process == test && !test.killed) {
+                  test.stdin.write('q\n');
+                  test.stdout.read();
+                  test.kill();
+                }
+            }, 10000);
         },
         teardown: function () {
-            if (tracker) {
-                tracker.stdin.write('q\n');
-                tracker.stdout.read();
-                tracker.kill();
+            edge.listening = false;
+            if (tracker && tracker.process && !tracker.process.killed) {
+                tracker.process.stdin.write('q\n');
+                tracker.process.stdout.read();
+                tracker.process.kill();
                 tracker = null;
             }
         },
         query: function() {
-            if (tracker) {
-                tracker.stdin.write('read\n');
-                var data = tracker.stdout.read();
+            if (tracker && tracker.process) {
+                tracker.process.stdin.write('read\n');
+                var data = tracker.process.stdout.read();
                 var lines = (data || "").split(/\n/);
                 var dimensions = {};
                 for (var idx = 0; idx < lines.length; idx++) {
@@ -87,13 +95,20 @@
             }
         },
         listen: function () {
-            if (tracker) { return; }
+            edge.listening = true;
+            if (tracker) { 
+              tracker.in_use = true;
+              return; 
+            }
             var dir = process.cwd() + "\\edge"
-            tracker = cp.spawn(dir + "\\EdgeTracker.exe", {
-                cwd: dir
-            });
-            tracker.stdin.setEncoding('utf-8');
-            tracker.stdout.setEncoding('utf-8');
+            tracker = {
+              in_use: true,
+              process: cp.spawn(dir + "\\EdgeTracker.exe", {
+                  cwd: dir
+              })
+            };
+            tracker.process.stdin.setEncoding('utf-8');
+            tracker.process.stdout.setEncoding('utf-8');
             setTimeout(edge.query, 100);
         },
         calibrate: function (callback) {
@@ -105,15 +120,15 @@
                         callback({ calibrated: false });
                         return;
                     }
-                    var test = cp.spawn(dir + "\\Calibrate.exe", {
+                    var calibrate = cp.spawn(dir + "\\Calibrate.exe", {
                         cwd: dir
                     });
                     var str = "";
-                    test.stdout.setEncoding('utf-8');
-                    test.stdout.on('data', function (data) {
+                    calibrate.stdout.setEncoding('utf-8');
+                    calibrate.stdout.on('data', function (data) {
                         str = str + data;
                     });
-                    test.on('exit', function (code) {
+                    calibrate.on('exit', function (code) {
                         console.log("output:", str);
                         if (fs.existsSync("C:\\Eyegaze\\calibration.dat")) {
                             cp.exec("copy /y C:\\Eyegaze\\calibration.dat " + dir + "\\calibration.dat");
@@ -128,10 +143,11 @@
             }
         },
         stop_listening: function () {
-            if (tracker) {
-                tracker.stdin.write('q\n');
-                tracker.stdout.read();
-                tracker.kill();
+            edge.listening = false;
+            if (tracker && tracker.process && !tracker.process.killed) {
+                tracker.process.stdin.write('q\n');
+                tracker.process.stdout.read();
+                tracker.process.kill();
                 tracker = null;
             }
         },
