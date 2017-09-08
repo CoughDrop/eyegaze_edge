@@ -43,17 +43,20 @@
             }
             setTimeout(function () {
                 manually_closing = true;
-                if(!tracker.in_use && tracker.process == test && !test.killed) {
-                  console.log("Eyegaze Edge killing setup process");
-                  test.stdin.write('q\n');
-                  test.stdout.read();
-                  test.kill();
+                if(!tracker || (!tracker.in_use && tracker.process == test)) {
+                  if(!test.killed) {
+                    console.log("Eyegaze Edge killing setup process");
+                    test.stdin.write('q\n');
+                    test.stdout.read();
+                    test.kill();
+                  }
                 }
             }, 10000);
         },
         teardown: function () {
             edge.listening = false;
             if (tracker && tracker.process && !tracker.process.killed) {
+                console.log("Eyegaze Edge tearing down");
                 tracker.process.stdin.write('q\n');
                 tracker.process.stdout.read();
                 tracker.process.kill();
@@ -147,6 +150,7 @@
         stop_listening: function () {
             edge.listening = false;
             if (tracker && tracker.process && !tracker.process.killed) {
+                console.log("Eyegaze Edge stopping listening");
                 tracker.process.stdin.write('q\n');
                 tracker.process.stdout.read();
                 tracker.process.kill();
