@@ -149,8 +149,11 @@
         },
         stop_listening: function () {
             edge.listening = false;
+            if(tracker) {
+              tracker.in_use = false;
+            }
             setTimeout(function() {
-              if (tracker && tracker.process && !tracker.process.killed) {
+              if (tracker && !tracker.in_use && tracker.process && !tracker.process.killed) {
                   console.log("Eyegaze Edge stopping listening");
                   tracker.process.stdin.write('q\n');
                   tracker.process.stdout.read();
