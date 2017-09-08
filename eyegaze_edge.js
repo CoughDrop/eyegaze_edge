@@ -149,13 +149,15 @@
         },
         stop_listening: function () {
             edge.listening = false;
-            if (tracker && tracker.process && !tracker.process.killed) {
-                console.log("Eyegaze Edge stopping listening");
-                tracker.process.stdin.write('q\n');
-                tracker.process.stdout.read();
-                tracker.process.kill();
-                tracker = null;
-            }
+            setTimeout(function() {
+              if (tracker && tracker.process && !tracker.process.killed) {
+                  console.log("Eyegaze Edge stopping listening");
+                  tracker.process.stdin.write('q\n');
+                  tracker.process.stdout.read();
+                  tracker.process.kill();
+                  tracker = null;
+              }
+            }, 10000);
         },
         ping: function () {
             return latest;
