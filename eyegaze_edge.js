@@ -44,6 +44,7 @@
             setTimeout(function () {
                 manually_closing = true;
                 if(!tracker.in_use && tracker.process == test && !test.killed) {
+                  console.log("Eyegaze Edge killing setup process");
                   test.stdin.write('q\n');
                   test.stdout.read();
                   test.kill();
@@ -97,6 +98,7 @@
         listen: function () {
             edge.listening = true;
             if (tracker) { 
+              console.log("Eyegaze Edge using existing process");
               tracker.in_use = true;
               return; 
             }
