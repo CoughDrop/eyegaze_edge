@@ -42,10 +42,16 @@ it needs to be in the `edge` folder within the application, along with the requi
 dlls provided by the vendor ([http://www.eyegaze.com]). As of publishing, the needed SDKs 
 and documentation are available here: http://www2.eyegaze.com/updates/
 
+Note that the `init` function of `_eyegaze_edge.cc` defines the method names that will be available to be
+called from JavaScript via a node import, as well as their mapping to internal methods. While 
+additional methods may be available from the SDK, we keep the method called to a minimum here
+to keep consistency across libraries, and because this code is not fun to maintain.
+
 When this library is installed, it should automatically be used by 
 [gazelinger.js](https://github.com/CoughDrop/gazelinger) if also installed.
 
-Also note, the dlls will only compile in x86, not x64.
+Also note, the dlls have only been tested with the x86, not x64 which was not available
+at time of testing.
 
 ### License
 
