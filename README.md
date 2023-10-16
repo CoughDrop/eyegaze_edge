@@ -39,7 +39,8 @@ setTimeout(function() {
 ### Technical Notes
 We use this library as part of our Electron app for CoughDrop. In order for it to work,
 it needs to be in the `edge` folder within the application, along with the required 
-dlls provided by the vendor ([http://www.eyegaze.com]).
+dlls provided by the vendor ([http://www.eyegaze.com]). As of publishing, the needed SDKs 
+and documentation are available here: http://www2.eyegaze.com/updates/
 
 When this library is installed, it should automatically be used by 
 [gazelinger.js](https://github.com/CoughDrop/gazelinger) if also installed.
